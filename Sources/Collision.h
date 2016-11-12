@@ -21,7 +21,7 @@ public:
 	float radius;
 
 	/************************************************************************/
-	/* Exercise 7 1.4                                                       */
+	/* Exercise P8.4*                                                       */
 	/************************************************************************/
 	/* Implement the collision functions below */
 
@@ -41,9 +41,8 @@ public:
 	}
 
 
-
 	bool IntersectsWith(const PlaneCollider& other) {
-		return other.normal.dot(center) + other.d <= radius;
+		return other.normal.dot(center) - other.d <= radius;
 	}
 
 	vec3 GetCollisionNormal(const PlaneCollider& other) {
@@ -51,7 +50,7 @@ public:
 	}
 
 	float PenetrationDepth(const PlaneCollider &other) {
-		return other.normal.dot(center) + other.d - radius;
+		return other.normal.dot(center) - other.d - radius;
 	}
 
 

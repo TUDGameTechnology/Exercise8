@@ -34,8 +34,6 @@ void PhysicsObject::HandleCollision(const PlaneCollider& collider, float deltaT)
 		//Position += collider.normal * -penetrationDepth;
 		//SetPosition(Position);
 
-		bool Result = Collider.IntersectsWith(collider);
-
 		// Calculate the impulse
 		// The plane is immovable, so we have to move all the way
 		float deltaVelocity = newSeparatingVelocity - separatingVelocity;
@@ -43,7 +41,7 @@ void PhysicsObject::HandleCollision(const PlaneCollider& collider, float deltaT)
 		// If the object is very slow, assume resting contact
 		if (deltaVelocity > -1.5f) {
 			Velocity.set(0, 0, 0);
-			Position = vec3(Position.x(), Collider.radius - collider.d, Position.z());
+			Position = vec3(Position.x(), Collider.radius + collider.d, Position.z());
 			Collider.center = Position;
 			return;
 		}
@@ -103,22 +101,20 @@ void PhysicsObject::ApplyForceToCenter(vec3 force) {
 
 void PhysicsObject::Integrate(float deltaT) {
 	/************************************************************************/
-	/* Exercise 7 1.3                                                       */
+	/* Exercise P8.3                                                       */
 	/************************************************************************/
 	/* Implement an Euler integrator here */
 	
 	
 	// Derive a new position based on the velocity (Note: Use SetPosition to also set the collider's values)
 	
-	
 	// Derive a new Velocity based on the accumulated forces
-	
+
 
 	// Multiply by a damping coefficient (e.g. 0.98)
-	
-	
+
 	// Clear the accumulator
-	
+
 }
 
 void PhysicsObject::UpdateMatrix() {

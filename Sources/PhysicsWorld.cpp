@@ -14,7 +14,7 @@ PhysicsWorld::PhysicsWorld() {
 		}
 
 		plane.normal = vec3(0, 1, 0);
-		plane.d = -1;
+		plane.d = 1;
 }
 
 
@@ -25,7 +25,7 @@ void PhysicsWorld::Update(float deltaT) {
 		// Apply gravity (= constant accceleration, so we multiply with the mass and divide in the integration step.
 		// The alternative would be to add gravity during the integration as a constant.
 
-		(*currentP)->ApplyForceToCenter(vec3(0, (*currentP)->Mass * -9.81, 0));
+		(*currentP)->ApplyForceToCenter(vec3(0, (*currentP)->Mass * -9.81f, 0.0f));
 		
 		// Integrate the equations of motion
 		(*currentP)->Integrate(deltaT);

@@ -1,6 +1,5 @@
 #include "pch.h"
 
-#include <Kore/Application.h>
 #include <Kore/IO/FileReader.h>
 #include <Kore/Math/Core.h>
 #include <Kore/Math/Random.h>
@@ -18,6 +17,8 @@
 #include "PhysicsObject.h"
 
 using namespace Kore;
+
+namespace {
 
 // A simple particle implementation
 class Particle {
@@ -41,7 +42,6 @@ public:
 
 	// Is the particle dead (= ready to be re-spawned?)
 	bool dead;
-
 
 	void init(const VertexStructure& structure) {
 		vb = new VertexBuffer(4, structure,0);
@@ -111,8 +111,6 @@ public:
 		// Build the matrix
 		M = mat4::Translation(position.x(), position.y(), position.z()) * mat4::Scale(0.2f, 0.2f, 0.2f);
 	}
-
-
 };
 
 
@@ -165,7 +163,6 @@ public:
 			nextSpawn = spawnRate;
 		}
 		
-		
 		for (int i = 0; i < numParticles; i++) {
 			
 			if (particles[i].dead) {
@@ -184,13 +181,13 @@ public:
 		Graphics::setRenderState(RenderState::DepthWrite, false);
 		
 		/************************************************************************/
-		/* Exercise 7 1.1                                                       */
+		/* Exercise P8.1 *                                                      */
 		/************************************************************************/
 		/* Change the matrix V in such a way that the billboards are oriented towards the camera */
 
 
 		/************************************************************************/
-		/* Exercise 7 1.2                                                       */
+		/* Exercise P8.2                                                       */
 		/************************************************************************/
 		/* Animate using at least one new control parameter */		
 
@@ -224,23 +221,12 @@ public:
 
 		particles[index].Emit(pos, velocity, 3.0f);
 	}
-
-
 };
 
 
 
-
-
-
-
-
-
-
-namespace {
-	const int width = 1024;
-	const int height = 768;
-	double startTime;
+	const int width = 512;
+	const int height = 512;
 	Shader* vertexShader;
 	Shader* fragmentShader;
 	Program* program;
@@ -252,7 +238,6 @@ namespace {
 
 	// null terminated array of PhysicsObject pointers
 	PhysicsObject* physicsObjects[] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
-
 
 	// The view projection matrix aka the camera
 	mat4 P;
@@ -266,53 +251,46 @@ namespace {
 
 	PhysicsWorld physics;
 	
-
 	// uniform locations - add more as you see fit
 	TextureUnit tex;
 	ConstantLocation pvLocation;
 	ConstantLocation mLocation;
-	ConstantLocation tintLocation;
+
 
 	Texture* particleImage;
 	ParticleSystem* particleSystem;
 
+	double startTime;
 	double lastTime;
 
 	void update() {
 		double t = System::time() - startTime;
 		double deltaT = t - lastTime;
-		//Kore::log(Info, "%f\n", deltaT);
+		// Kore::log(Info, "%f\n", deltaT);
 		lastTime = t;
 		Kore::Audio::update();
 		
 		Graphics::begin();
 		Graphics::clear(Graphics::ClearColorFlag | Graphics::ClearDepthFlag, 0xff9999FF, 1000.0f);
 
-		Graphics::setFloat4(tintLocation, vec4(1, 1, 1, 1));
-
 		program->set();
-		
+		Graphics::setBlendingMode(SourceAlpha, Kore::BlendingOperation::InverseSourceAlpha);
+		Graphics::setRenderState(BlendingState, true);
 
-		angle += 0.3f * deltaT;
+		angle += 0.3f * (float) deltaT;
 
 		float x = 0 + 3 * Kore::cos(angle);
 		float z = 0 + 3 * Kore::sin(angle);
 		
 		cameraPosition.set(x, 2, z);
 
-		//PV = mat4::Perspective(60, (float)width / (float)height, 0.1f, 100) * mat4::lookAt(vec3(0, 2, -3), vec3(0, 2, 0), vec3(0, 1, 0));
-		P = mat4::Perspective(60, (float)width / (float)height, 0.1f, 100);
+		P = mat4::Perspective(20.0f, (float)width / (float)height, 0.1f, 100.0f);
 		View = mat4::lookAt(vec3(x, 2, z), vec3(0, 2, 0), vec3(0, 1, 0));
 		PV = P * View;
 
-
 		Graphics::setMatrix(pvLocation, PV);
-
-
-
-
-
-		// iterate the MeshObjects
+		
+		// Iterate the MeshObjects and render them
 		MeshObject** current = &objects[0];
 		while (*current != nullptr) {
 			// set the model matrix
@@ -322,10 +300,8 @@ namespace {
 			++current;
 		} 
 
-		
-
-		// Update the physics
-		physics.Update(deltaT);
+		// Update the physics and render the meshes
+		physics.Update((float) deltaT);
 
 		PhysicsObject** currentP = &physics.physicsObjects[0];
 		while (*currentP != nullptr) {
@@ -335,12 +311,8 @@ namespace {
 			++currentP;
 		}
 		
-
-
-		particleSystem->update(deltaT);
+		particleSystem->update((float) deltaT);
 		particleSystem->render(tex, particleImage, mLocation, View);
-
-
 
 		Graphics::end();
 		Graphics::swapBuffers();
@@ -355,9 +327,6 @@ namespace {
 		po->Mass = 5;
 		po->Mesh = sphere;
 			
-		// The impulse should carry the object forward
-		// Use the inverse of the view matrix
-
 		po->ApplyImpulse(Velocity);
 		physics.AddObject(po);
 	}
@@ -367,10 +336,9 @@ namespace {
 			
 			// The impulse should carry the object forward
 			// Use the inverse of the view matrix
-
-			vec4 impulse(0, 0.4, 2, 0);
+			vec4 impulse(0, 0.4f, 2.0f, 0);
 			mat4 viewI = View;
-			viewI.Invert();
+			viewI = View.Invert();
 			impulse = viewI * impulse;
 			
 			vec3 impulse3(impulse.x(), impulse.y(), impulse.z());
@@ -386,17 +354,15 @@ namespace {
 		}
 	}
 
-	void mouseMove(int x, int y, int movementX, int movementY) {
+	void mouseMove(int windowId, int x, int y, int movementX, int movementY) {
 
 	}
 	
-	void mousePress(int button, int x, int y) {
+	void mousePress(int windowId, int button, int x, int y) {
 
 	}
 
-	
-
-	void mouseRelease(int button, int x, int y) {
+	void mouseRelease(int windowId, int button, int x, int y) {
 		
 	}
 
@@ -420,7 +386,6 @@ namespace {
 		tex = program->getTextureUnit("tex");
 		pvLocation = program->getConstantLocation("PV");
 		mLocation = program->getConstantLocation("M");
-		tintLocation = program->getConstantLocation("tint");
 
 		objects[0] = new MeshObject("Base.obj", "Level/basicTiles6x6.png", structure);
 		objects[0]->M = mat4::Translation(0.0f, 1.0f, 0.0f);
@@ -429,44 +394,53 @@ namespace {
 
 		SpawnSphere(vec3(0, 2, 0), vec3(0, 0, 0));
 		
-		
-
 		Graphics::setRenderState(DepthTest, true);
 		Graphics::setRenderState(DepthTestCompare, ZCompareLess);
+		Graphics::setRenderState(DepthWrite, true);
 
 		Graphics::setTextureAddressing(tex, U, Repeat);
 		Graphics::setTextureAddressing(tex, V, Repeat);
 
 		particleImage = new Texture("SuperParticle.png", true);
 		particleSystem = new ParticleSystem(100, structure);
-
-		
-
 	}
 }
 
 int kore(int argc, char** argv) {
-	Application* app = new Application(argc, argv, width, height, 0, false, "Exercise7");
-	
+	Kore::System::setName("TUD Game Technology - ");
+	Kore::System::setup();
+	Kore::WindowOptions options;
+	options.title = "Exercise 8";
+	options.width = width;
+	options.height = height;
+	options.x = 100;
+	options.y = 100;
+	options.targetDisplay = -1;
+	options.mode = WindowModeWindow;
+	options.rendererOptions.depthBufferBits = 16;
+	options.rendererOptions.stencilBufferBits = 8;
+	options.rendererOptions.textureFormat = 0;
+	options.rendererOptions.antialiasing = 0;
+	Kore::System::initWindow(options);
+
 	init();
 
-	app->setCallback(update);
+	Kore::System::setCallback(update);
 
-	startTime = System::time();
-	lastTime = 0.0f;
 	Kore::Mixer::init();
 	Kore::Audio::init();
-	
-	
+
+
+	startTime = (float) System::time();
+
+
 	Keyboard::the()->KeyDown = keyDown;
 	Keyboard::the()->KeyUp = keyUp;
 	Mouse::the()->Move = mouseMove;
 	Mouse::the()->Press = mousePress;
 	Mouse::the()->Release = mouseRelease;
 
-	app->start();
+	Kore::System::start();
 
-	delete app;
-	
 	return 0;
 }

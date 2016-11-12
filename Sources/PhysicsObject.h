@@ -2,10 +2,6 @@
 
 #include "pch.h"
 
-// TODO: Way too many includes
-// TODO: Everything public
-
-#include <Kore/Application.h>
 #include <Kore/IO/FileReader.h>
 #include <Kore/Math/Core.h>
 #include <Kore/Math/Random.h>

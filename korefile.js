@@ -5,5 +5,6 @@ project.setDebugDir('Deployment');
 
 Project.createProject('Kore', __dirname).then((subproject) => {
 	project.addSubProject(subproject);
+	project.cpp11 = true;
 	resolve(project);
 });

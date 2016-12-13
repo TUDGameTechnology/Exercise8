@@ -423,6 +423,8 @@ int kore(int argc, char** argv) {
 	options.rendererOptions.antialiasing = 0;
 	Kore::System::initWindow(options);
 
+	Kore::Random::init(42);
+
 	init();
 
 	Kore::System::setCallback(update);

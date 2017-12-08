@@ -2,25 +2,14 @@
 
 #include "pch.h"
 
-#include <Kore/IO/FileReader.h>
-#include <Kore/Math/Core.h>
-#include <Kore/Math/Random.h>
-#include <Kore/System.h>
-#include <Kore/Input/Keyboard.h>
-#include <Kore/Input/Mouse.h>
-#include <Kore/Audio/Mixer.h>
-#include <Kore/Graphics/Image.h>
-#include <Kore/Graphics/Graphics.h>
-#include <Kore/Log.h>
-#include "ObjLoader.h"
+#include <Kore/Graphics1/Image.h>
+#include <Kore/Graphics5/Graphics.h>
 
-using namespace Kore;
-
+#include "Memory.h"
 #include "Collision.h"
 #include "MeshObject.h"
-#include "PhysicsWorld.h"
 
-
+using namespace Kore;
 
 // A physically simulated object
 class PhysicsObject {

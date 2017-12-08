@@ -1,7 +1,6 @@
 #include "PhysicsObject.h"
 #include "Kore/Log.h"
 
-
 using namespace Kore;
 
 int PhysicsObject::currentID;
@@ -28,7 +27,6 @@ void PhysicsObject::HandleCollision(const PlaneCollider& collider, float deltaT)
 		// Calculate a new one, based on the old one and the restitution
 		float newSeparatingVelocity = -separatingVelocity * restitution;
 
-			
 		// Move the object out of the collider
 		float penetrationDepth = Collider.PenetrationDepth(collider); 
 		//Position += collider.normal * -penetrationDepth;

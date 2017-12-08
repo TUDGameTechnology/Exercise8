@@ -3,9 +3,7 @@
 #include "PhysicsWorld.h"
 #include "PhysicsObject.h"
 
-
 using namespace Kore;
-
 
 PhysicsWorld::PhysicsWorld() {
 	physicsObjects = new PhysicsObject*[100];
@@ -16,7 +14,6 @@ PhysicsWorld::PhysicsWorld() {
 		plane.normal = vec3(0, 1, 0);
 		plane.d = 1;
 }
-
 
 void PhysicsWorld::Update(float deltaT) {
 	PhysicsObject** currentP = &physicsObjects[0];
@@ -42,7 +39,6 @@ void PhysicsWorld::Update(float deltaT) {
 
 		currentP = &physicsObjects[0];
 		while (*currentP != nullptr) {
-
 			
 			// Check for collisions with the other objects
 			PhysicsObject** currentCollision = currentP + 1;
@@ -53,11 +49,6 @@ void PhysicsWorld::Update(float deltaT) {
 			}
 			++currentP;
 		}
-
-		
-
-		
-
 }
 
 
@@ -67,5 +58,4 @@ void PhysicsWorld::AddObject(PhysicsObject* po) {
 		++current;
 	} 
 	*current = po;
-
 }

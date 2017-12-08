@@ -4,14 +4,11 @@
 
 using namespace Kore;
 
-
 // A plane is defined as the plane's normal and the distance of the plane to the origin
 class PlaneCollider {
 public:
 	float d;
 	vec3 normal;
-
-
 };
 
 // A sphere is defined by a radius and a center.

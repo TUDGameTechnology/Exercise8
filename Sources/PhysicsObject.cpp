@@ -99,18 +99,17 @@ void PhysicsObject::ApplyForceToCenter(vec3 force) {
 
 void PhysicsObject::Integrate(float deltaT) {
 	/************************************************************************/
-	/* Exercise P8.3                                                       */
+	/* Exercise P8.3														*/
 	/************************************************************************/
 	/* Implement an Euler integrator here */
-	
 	
 	// Derive a new position based on the velocity (Note: Use SetPosition to also set the collider's values)
 	
 	// Derive a new Velocity based on the accumulated forces
-
-
+	
 	// Multiply by a damping coefficient (e.g. 0.98)
-
+	float damping = 0.98f;
+	
 	// Clear the accumulator
 
 }

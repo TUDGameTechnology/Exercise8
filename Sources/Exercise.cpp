@@ -6,15 +6,14 @@
 #include <Kore/Math/Random.h>
 #include <Kore/Input/Keyboard.h>
 #include <Kore/Input/Mouse.h>
-#include <Kore/Graphics1/Image.h>
-#include <Kore/Graphics4/Graphics.h>
-#include <Kore/Graphics4/PipelineState.h>
 #include <Kore/Log.h>
 #include "ObjLoader.h"
 
 #include "Collision.h"
 #include "PhysicsWorld.h"
 #include "PhysicsObject.h"
+#include "Memory.h"
+#include "ShaderProgram.h"
 
 using namespace Kore;
 
@@ -90,8 +89,7 @@ public:
 		vertices[index*8 + 7] = -1.0f;
 	}
 
-	void render(Graphics4::TextureUnit tex, Graphics4::Texture* image) {
-		Graphics4::setTexture(tex, image);
+	void render() {
 		Graphics4::setVertexBuffer(*vb);
 		Graphics4::setIndexBuffer(*ib);
 		Graphics4::drawIndexedVertices();
@@ -115,6 +113,11 @@ public:
 
 
 class ParticleSystem {
+private:
+	ShaderProgram* shaderProgram;
+	
+	Graphics4::Texture* particleImage;
+	
 public:
 
 	// The center of the particle system
@@ -138,19 +141,25 @@ public:
 	// When should the next particle be spawned?
 	float nextSpawn;
 
-	ParticleSystem(int maxParticles, const Graphics4::VertexStructure& structure ) {
+	ParticleSystem(int maxParticles, const Graphics4::VertexStructure& structure, ShaderProgram* shaderProgram) : numParticles(maxParticles), shaderProgram(shaderProgram) {
 		particles = new Particle[maxParticles];
-		numParticles = maxParticles;
 		for (int i = 0; i < maxParticles; i++) {
 			particles[i].init(structure);
 		}
 		spawnRate = 0.05f;
 		nextSpawn = spawnRate;
 
-		position = vec3(0.5f, 1.3f, 0.5f);
-		float b = 0.1f;
-		emitMin = position + vec3(-b, -b, -b);
-		emitMax = position + vec3(b, b, b);
+		setPosition(vec3(0.5f, 1.3f, 0.5f));
+		
+		particleImage = new Graphics4::Texture("SuperParticle.png", true);
+	}
+	
+	void setPosition(const Kore::vec3& inPosition, float distance = 0.1f)
+	{
+		position = inPosition;
+		
+		emitMin = position - vec3(distance, distance, distance);
+		emitMax = position + vec3(distance, distance, distance);
 	}
 
 	
@@ -176,24 +185,25 @@ public:
 		}
 	}
 
-	void render(Graphics4::TextureUnit tex, Graphics4::Texture* image, Graphics4::ConstantLocation mLocation, mat4 V) {
+	void render(SceneParameters& parameters) {
 		/************************************************************************/
-		/* Exercise P8.1 *                                                      */
+		/* Exercise P8.1														*/
 		/************************************************************************/
 		/* Change the matrix V in such a way that the billboards are oriented towards the camera */
 
 
 		/************************************************************************/
-		/* Exercise P8.2                                                       */
+		/* Exercise P8.2														*/
 		/************************************************************************/
 		/* Animate using at least one new control parameter */		
 
 		for (int i = 0; i < numParticles; i++) {
 			// Skip dead particles
 			if (particles[i].dead) continue;
-
-			Graphics4::setMatrix(mLocation, particles[i].M * V);
-			particles[i].render(tex, image);
+			
+			shaderProgram->Set(parameters, particles[i].M * parameters.V, particleImage);
+			
+			particles[i].render();
 		}
 	}
 
@@ -221,10 +231,7 @@ public:
 
 	const int width = 512;
 	const int height = 512;
-	Graphics4::Shader* vertexShader;
-	Graphics4::Shader* fragmentShader;
-	Graphics4::PipelineState* pipeline;
-
+	
 	float angle = 0.0f;
 
 	// null terminated array of MeshObject pointers
@@ -235,7 +242,7 @@ public:
 
 	// The view projection matrix aka the camera
 	mat4 P;
-	mat4 View;
+	mat4 V;
 	mat4 PV;
 
 	vec3 cameraPosition;
@@ -244,15 +251,10 @@ public:
 	PhysicsObject* po;
 
 	PhysicsWorld physics;
-	
-	// uniform locations - add more as you see fit
-	Graphics4::TextureUnit tex;
-	Graphics4::ConstantLocation pvLocation;
-	Graphics4::ConstantLocation mLocation;
 
-
-	Graphics4::Texture* particleImage;
 	ParticleSystem* particleSystem;
+	
+	SceneParameters parameters;
 
 	double startTime;
 	double lastTime;
@@ -266,8 +268,6 @@ public:
 		Graphics4::begin();
 		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, 0xff9999FF, 1000.0f);
 
-		Graphics4::setPipeline(pipeline);
-		
 		angle += 0.3f * (float) deltaT;
 
 		float x = 0 + 3 * Kore::cos(angle);
@@ -276,18 +276,16 @@ public:
 		cameraPosition.set(x, 2, z);
 
 		P = mat4::Perspective(20.0f, (float)width / (float)height, 0.1f, 100.0f);
-		View = mat4::lookAt(vec3(x, 2, z), vec3(0, 2, 0), vec3(0, 1, 0));
-		PV = P * View;
+		V = mat4::lookAt(vec3(x, 2, z), vec3(0, 2, 0), vec3(0, 1, 0));
+		PV = P * V;
 
-		Graphics4::setMatrix(pvLocation, PV);
+		parameters.PV = PV;
+		parameters.V = V;
 		
 		// Iterate the MeshObjects and render them
 		MeshObject** current = &objects[0];
 		while (*current != nullptr) {
-			// set the model matrix
-			Graphics4::setMatrix(mLocation, (*current)->M);
-
-			(*current)->render(tex);
+			(*current)->render(parameters);
 			++current;
 		} 
 
@@ -297,13 +295,12 @@ public:
 		PhysicsObject** currentP = &physics.physicsObjects[0];
 		while (*currentP != nullptr) {
 			(*currentP)->UpdateMatrix();
-			Graphics4::setMatrix(mLocation, (*currentP)->Mesh->M);
-			(*currentP)->Mesh->render(tex);
+			(*currentP)->Mesh->render(parameters);
 			++currentP;
 		}
 		
 		particleSystem->update((float) deltaT);
-		particleSystem->render(tex, particleImage, mLocation, View);
+		particleSystem->render(parameters);
 
 		Graphics4::end();
 		Graphics4::swapBuffers();
@@ -328,9 +325,8 @@ public:
 			// The impulse should carry the object forward
 			// Use the inverse of the view matrix
 			vec4 impulse(0, 0.4f, 2.0f, 0);
-			mat4 viewI = View;
-			viewI = View.Invert();
-			impulse = viewI * impulse;
+			mat4 VI = V.Invert();
+			impulse = VI * impulse;
 			
 			vec3 impulse3(impulse.x(), impulse.y(), impulse.z());
 
@@ -360,42 +356,24 @@ public:
 	void init() {
 		Memory::init();
 		
-		FileReader vs("shader.vert");
-		FileReader fs("shader.frag");
-		vertexShader = new Graphics4::Shader(vs.readAll(), vs.size(), Graphics4::VertexShader);
-		fragmentShader = new Graphics4::Shader(fs.readAll(), fs.size(), Graphics4::FragmentShader);
-
 		// This defines the structure of your Vertex Buffer
 		Graphics4::VertexStructure structure;
 		structure.add("pos", Graphics4::Float3VertexData);
 		structure.add("tex", Graphics4::Float2VertexData);
 		structure.add("nor", Graphics4::Float3VertexData);
 
-		pipeline = new Graphics4::PipelineState;
-		pipeline->inputLayout[0] = &structure;
-		pipeline->inputLayout[1] = nullptr;
-		pipeline->vertexShader = vertexShader;
-		pipeline->fragmentShader = fragmentShader;
-		pipeline->depthMode = Graphics4::ZCompareLess;
-		pipeline->depthWrite = true;
-		pipeline->compile();
-
-		tex = pipeline->getTextureUnit("tex");
-		pvLocation = pipeline->getConstantLocation("PV");
-		mLocation = pipeline->getConstantLocation("M");
-
-		objects[0] = new MeshObject("Base.obj", "Level/basicTiles6x6.png", structure);
+		// Set up shader
+		ShaderProgram* shader = new ShaderProgram("shader.vert", "shader.frag", structure, true);
+		ShaderProgram* shaderParticle = new ShaderProgram("shader.vert", "shader.frag", structure, false);
+		
+		objects[0] = new MeshObject("Base.obj", "Level/basicTiles6x6.png", structure, shader);
 		objects[0]->M = mat4::Translation(0.0f, 1.0f, 0.0f);
-
-		sphere = new MeshObject("ball_at_origin.obj", "Level/unshaded.png", structure);
-
+		
+		sphere = new MeshObject("ball_at_origin.obj", "Level/unshaded.png", structure, shader);
+		
 		SpawnSphere(vec3(0, 2, 0), vec3(0, 0, 0));
 		
-		Graphics4::setTextureAddressing(tex, Graphics4::U, Graphics4::Repeat);
-		Graphics4::setTextureAddressing(tex, Graphics4::V, Graphics4::Repeat);
-
-		particleImage = new Graphics4::Texture("SuperParticle.png", true);
-		particleSystem = new ParticleSystem(100, structure);
+		particleSystem = new ParticleSystem(100, structure, shaderParticle);
 	}
 }
 

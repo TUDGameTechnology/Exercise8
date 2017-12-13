@@ -151,7 +151,7 @@ public:
 
 		setPosition(vec3(0.5f, 1.3f, 0.5f));
 		
-		particleImage = new Graphics4::Texture("SuperParticle.png", true);
+		particleImage = new Graphics4::Texture("SuperParticle.png");
 	}
 	
 	void setPosition(const Kore::vec3& inPosition, float distance = 0.1f)

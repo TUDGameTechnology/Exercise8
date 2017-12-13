@@ -39,6 +39,7 @@ class ShaderProgram {
 		
 		pvLocation = pipeline->getConstantLocation("PV");
 		mLocation = pipeline->getConstantLocation("M");
+		tex = pipeline->getTextureUnit("tex");
 		
 		// Add additional locations
 	}

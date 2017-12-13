@@ -18,7 +18,7 @@ class MeshObject {
 public:
 	MeshObject(const char* meshFile, const char* textureFile, const Graphics4::VertexStructure& structure, ShaderProgram* shaderProgram, float scale = 1.0f) : shaderProgram(shaderProgram) {
 		mesh = loadObj(meshFile);
-		image = new Graphics4::Texture(textureFile, true);
+		image = new Graphics4::Texture(textureFile);
 		
 		vertexBuffer = new Graphics4::VertexBuffer(mesh->numVertices, structure,0);
 		float* vertices = vertexBuffer->lock();

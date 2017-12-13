@@ -9,8 +9,6 @@
 #include "Collision.h"
 #include "MeshObject.h"
 
-using namespace Kore;
-
 // A physically simulated object
 class PhysicsObject {
 vec3 Position;

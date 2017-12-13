@@ -4,8 +4,6 @@
 #include <Kore/Graphics4/Graphics.h>
 #include "Collision.h"
 
-using namespace Kore;
-
 class PhysicsObject;
 
 // Handles all physically simulated objects.

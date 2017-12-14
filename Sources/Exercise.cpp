@@ -26,10 +26,10 @@ public:
 	Graphics4::IndexBuffer* ib;
 
 	mat4 M;
-	
+
 	// The current position
 	vec3 position;
-	
+
 	// The current velocity
 	vec3 velocity;
 
@@ -47,8 +47,8 @@ public:
 		float* vertices = vb->lock();
 		SetVertex(vertices, 0, -1, -1, 0, 0, 0);
 		SetVertex(vertices, 1, -1, 1, 0, 0, 1);
-		SetVertex(vertices, 2, 1, 1, 0, 1, 1); 
-		SetVertex(vertices, 3, 1, -1, 0, 1, 0); 
+		SetVertex(vertices, 2, 1, 1, 0, 1, 1);
+		SetVertex(vertices, 3, 1, -1, 0, 1, 0);
 		vb->unlock();
 
 		// Set index buffer
@@ -101,7 +101,7 @@ public:
 		if (timeToLive < 0.0f) {
 			dead = true;
 		}
-		
+
 		// Note: We are using no forces or gravity at the moment.
 
 		position += velocity * deltaTime;
@@ -115,9 +115,9 @@ public:
 class ParticleSystem {
 private:
 	ShaderProgram* shaderProgram;
-	
+
 	Graphics4::Texture* particleImage;
-	
+
 public:
 
 	// The center of the particle system
@@ -128,7 +128,7 @@ public:
 
 	// The maximal coordinates of the emitter box
 	vec3 emitMax;
-	
+
 	// The list of particles
 	Particle* particles;
 
@@ -137,7 +137,7 @@ public:
 
 	// The spawn rate
 	float spawnRate;
-	
+
 	// When should the next particle be spawned?
 	float nextSpawn;
 
@@ -150,19 +150,19 @@ public:
 		nextSpawn = spawnRate;
 
 		setPosition(vec3(0.5f, 1.3f, 0.5f));
-		
+
 		particleImage = new Graphics4::Texture("SuperParticle.png");
 	}
-	
+
 	void setPosition(const Kore::vec3& inPosition, float distance = 0.1f)
 	{
 		position = inPosition;
-		
+
 		emitMin = position - vec3(distance, distance, distance);
 		emitMax = position + vec3(distance, distance, distance);
 	}
 
-	
+
 	void update(float deltaTime) {
 		// Do we need to spawn a particle?
 		nextSpawn -= deltaTime;
@@ -171,9 +171,9 @@ public:
 			spawnParticle = true;
 			nextSpawn = spawnRate;
 		}
-		
+
 		for (int i = 0; i < numParticles; i++) {
-			
+
 			if (particles[i].dead) {
 				if (spawnParticle) {
 					EmitParticle(i);
@@ -195,14 +195,14 @@ public:
 		/************************************************************************/
 		/* Exercise P8.2														*/
 		/************************************************************************/
-		/* Animate using at least one new control parameter */		
+		/* Animate using at least one new control parameter */
 
 		for (int i = 0; i < numParticles; i++) {
 			// Skip dead particles
 			if (particles[i].dead) continue;
-			
+
 			shaderProgram->Set(parameters, particles[i].M * parameters.V, particleImage);
-			
+
 			particles[i].render();
 		}
 	}
@@ -231,7 +231,7 @@ public:
 
 	const int width = 512;
 	const int height = 512;
-	
+
 	float angle = 0.0f;
 
 	// null terminated array of MeshObject pointers
@@ -253,7 +253,7 @@ public:
 	PhysicsWorld physics;
 
 	ParticleSystem* particleSystem;
-	
+
 	SceneParameters parameters;
 
 	double startTime;
@@ -262,9 +262,9 @@ public:
 	void update() {
 		double t = System::time() - startTime;
 		double deltaT = t - lastTime;
-		// Kore::log(Info, "%f\n", deltaT);
+		//Kore::log(Info, "%f", deltaT);
 		lastTime = t;
-		
+
 		Graphics4::begin();
 		Graphics4::clear(Graphics4::ClearColorFlag | Graphics4::ClearDepthFlag, 0xff9999FF, 1000.0f);
 
@@ -272,7 +272,7 @@ public:
 
 		float x = 0 + 3 * Kore::cos(angle);
 		float z = 0 + 3 * Kore::sin(angle);
-		
+
 		cameraPosition.set(x, 2, z);
 
 		P = mat4::Perspective(20.0f, (float)width / (float)height, 0.1f, 100.0f);
@@ -281,13 +281,13 @@ public:
 
 		parameters.PV = PV;
 		parameters.V = V;
-		
+
 		// Iterate the MeshObjects and render them
 		MeshObject** current = &objects[0];
 		while (*current != nullptr) {
 			(*current)->render(parameters);
 			++current;
-		} 
+		}
 
 		// Update the physics and render the meshes
 		physics.Update((float) deltaT);
@@ -298,7 +298,7 @@ public:
 			(*currentP)->Mesh->render(parameters);
 			++currentP;
 		}
-		
+
 		particleSystem->update((float) deltaT);
 		particleSystem->render(parameters);
 
@@ -314,23 +314,23 @@ public:
 
 		po->Mass = 5;
 		po->Mesh = sphere;
-			
+
 		po->ApplyImpulse(Velocity);
 		physics.AddObject(po);
 	}
 
 	void keyDown(KeyCode code) {
 		if (code == KeySpace) {
-			
+
 			// The impulse should carry the object forward
 			// Use the inverse of the view matrix
 			vec4 impulse(0, 0.4f, 2.0f, 0);
 			mat4 VI = V.Invert();
 			impulse = VI * impulse;
-			
+
 			vec3 impulse3(impulse.x(), impulse.y(), impulse.z());
 
-			
+
 			SpawnSphere(cameraPosition + impulse3 *0.2f, impulse3);
 		}
 	}
@@ -344,18 +344,18 @@ public:
 	void mouseMove(int windowId, int x, int y, int movementX, int movementY) {
 
 	}
-	
+
 	void mousePress(int windowId, int button, int x, int y) {
 
 	}
 
 	void mouseRelease(int windowId, int button, int x, int y) {
-		
+
 	}
 
 	void init() {
 		Memory::init();
-		
+
 		// This defines the structure of your Vertex Buffer
 		Graphics4::VertexStructure structure;
 		structure.add("pos", Graphics4::Float3VertexData);
@@ -365,14 +365,14 @@ public:
 		// Set up shader
 		ShaderProgram* shader = new ShaderProgram("shader.vert", "shader.frag", structure, true);
 		ShaderProgram* shaderParticle = new ShaderProgram("shader.vert", "shader.frag", structure, false);
-		
+
 		objects[0] = new MeshObject("Base.obj", "Level/basicTiles6x6.png", structure, shader);
 		objects[0]->M = mat4::Translation(0.0f, 1.0f, 0.0f);
-		
+
 		sphere = new MeshObject("ball_at_origin.obj", "Level/unshaded.png", structure, shader);
-		
+
 		SpawnSphere(vec3(0, 2, 0), vec3(0, 0, 0));
-		
+
 		particleSystem = new ParticleSystem(100, structure, shaderParticle);
 	}
 }
@@ -386,7 +386,8 @@ int kore(int argc, char** argv) {
 
 	Kore::System::setCallback(update);
 
-	startTime = (float) System::time();
+	startTime = System::time();
+    lastTime = 0.0;
 
 	Keyboard::the()->KeyDown = keyDown;
 	Keyboard::the()->KeyUp = keyUp;

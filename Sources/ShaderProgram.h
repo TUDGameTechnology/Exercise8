@@ -21,8 +21,8 @@ class ShaderProgram {
 	ShaderProgram(const char* vsFile, const char* fsFile, Graphics4::VertexStructure& structure, bool depthWrite)
 	{
 		// Load and link the shaders
-		FileReader vs("shader.vert");
-		FileReader fs("shader.frag");
+		FileReader vs(vsFile);
+		FileReader fs(fsFile);
 		vertexShader = new Graphics4::Shader(vs.readAll(), vs.size(), Graphics4::VertexShader);
 		fragmentShader = new Graphics4::Shader(fs.readAll(), fs.size(), Graphics4::FragmentShader);
 		
